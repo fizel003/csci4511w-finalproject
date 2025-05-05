@@ -10,7 +10,7 @@ import re
 import csv
 
 def mhd(node):
-    rows = 8
+    rows = 4
     columns = 2
     '''
     Define your manhattan-distance heuristic for the minigame here
@@ -21,8 +21,6 @@ def mhd(node):
     for i in range(rows):
         for j in range(columns):
             goals[(i * columns) + j + 1] = [i, j]
-    
-    # print(goals)
 
     totaldistance = 0
     statetuple = node.state
@@ -161,20 +159,152 @@ class SurvivorsMinigameTest:
         print(times)
 
     def test_2x3s(self):
-        times = []
-        for i in range(20):
-            list = [1, 2, 3, 4, 5, 6, 7, 8]
+        individual_trials = []
+        for i in range(50):
+            list = [1, 2, 3, 4, 5, 6]
             random.shuffle(list)
             input = tuple(list + [0])
             print(input)
 
-            puzzle = SurvivorsMinigame(input, 2, 4)
-            print(f"2x4 A* with Manhattan heuristic: Trial {i+1}")    
-            start3x3 = time.time()
+            puzzle = SurvivorsMinigame(input, 2, 3)
+            print()
+            print(f"2x3 A* with Default heuristic: Trial {i+1}")    
+            
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startdef = time.time()
+            print(astar_search(puzzle, None, True).solution())
+            enddef = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            defsol = astar_search(puzzle, None, True).solution()
+            if match:
+                expandeddef = int(match.group(1))
+                frontierdef = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+
+            print(f"2x3 A* with MHD heuristic: Trial {i+1}")   
+
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startmhd = time.time()
             print(astar_search(puzzle, mhd, True).solution())
-            end3x3 = time.time()
-            times.append(end3x3-start3x3)
-        print(times)
+            endmhd = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+            
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            mhdsol = astar_search(puzzle, mhd, True).solution()
+            if match:
+                expandedmhd = int(match.group(1))
+                frontiermhd = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+            individual_dict = {
+                "input": input,
+                "defSolution": defsol,
+                "defExpanded": expandeddef,
+                "defFrontier": frontierdef,
+                "defTime": enddef-startdef,
+                "mhdSolution": mhdsol,
+                "mhdExpanded": expandedmhd,
+                "mhdFrontier": frontiermhd,
+                "mhdTime": endmhd-startmhd,
+            }
+            if(defsol == mhdsol):
+                individual_dict["sameSolution"] = True
+                individual_dict["betterSolution"] = "N/A"
+            else:
+                individual_dict["sameSolution"] = False
+                individual_dict["betterSolution"] = "Manhattan" if len(mhdsol) < len(defsol) else "Default"
+
+            print(individual_dict)
+            individual_trials.append(individual_dict)
+        
+        with open('2x3output.csv', mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=individual_trials[0].keys())
+            writer.writeheader()
+            writer.writerows(individual_trials)
+    
+    def test_3x2s(self):
+        individual_trials = []
+        for i in range(50):
+            list = [1, 2, 3, 4, 5, 6]
+            random.shuffle(list)
+            input = tuple(list + [0])
+            print(input)
+
+            puzzle = SurvivorsMinigame(input, 3, 2)
+            print()
+            print(f"3x2 A* with Default heuristic: Trial {i+1}")    
+            
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startdef = time.time()
+            print(astar_search(puzzle, None, True).solution())
+            enddef = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            defsol = astar_search(puzzle, None, True).solution()
+            if match:
+                expandeddef = int(match.group(1))
+                frontierdef = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+
+            print(f"3x2 A* with MHD heuristic: Trial {i+1}")   
+
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startmhd = time.time()
+            print(astar_search(puzzle, mhd, True).solution())
+            endmhd = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+            
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            mhdsol = astar_search(puzzle, mhd, True).solution()
+            if match:
+                expandedmhd = int(match.group(1))
+                frontiermhd = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+            individual_dict = {
+                "input": input,
+                "defSolution": defsol,
+                "defExpanded": expandeddef,
+                "defFrontier": frontierdef,
+                "defTime": enddef-startdef,
+                "mhdSolution": mhdsol,
+                "mhdExpanded": expandedmhd,
+                "mhdFrontier": frontiermhd,
+                "mhdTime": endmhd-startmhd,
+            }
+            if(defsol == mhdsol):
+                individual_dict["sameSolution"] = True
+                individual_dict["betterSolution"] = "N/A"
+            else:
+                individual_dict["sameSolution"] = False
+                individual_dict["betterSolution"] = "Manhattan" if len(mhdsol) <= len(defsol) else "Default"
+
+            print(individual_dict)
+            individual_trials.append(individual_dict)
+        
+        with open('3x2output.csv', mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=individual_trials[0].keys())
+            writer.writeheader()
+            writer.writerows(individual_trials)
 
     def test_2x3s(self):
         individual_trials = []
@@ -226,23 +356,177 @@ class SurvivorsMinigameTest:
                 print("Could not parse output")
             individual_dict = {
                 "input": input,
-                "defsol": defsol,
-                "expandeddef": expandeddef,
-                "frontierdef": frontierdef,
-                "deftime": enddef-startdef,
-                "mhdsol": mhdsol,
-                "expandedmhd": expandedmhd,
-                "frontiermhd": frontiermhd,
-                "mhdtime": endmhd-startmhd,
-                "samesol": (defsol == mhdsol)
+                "defSolution": defsol,
+                "defExpanded": expandeddef,
+                "defFrontier": frontierdef,
+                "defTime": enddef-startdef,
+                "mhdSolution": mhdsol,
+                "mhdExpanded": expandedmhd,
+                "mhdFrontier": frontiermhd,
+                "mhdTime": endmhd-startmhd,
             }
+            if(defsol == mhdsol):
+                individual_dict["sameSolution"] = True
+                individual_dict["betterSolution"] = "N/A"
+            else:
+                individual_dict["sameSolution"] = False
+                individual_dict["betterSolution"] = "Manhattan" if len(mhdsol) < len(defsol) else "Default"
+
             print(individual_dict)
             individual_trials.append(individual_dict)
         
-        with open('output.csv', mode='w', newline='') as file:
+        with open('2x3output.csv', mode='w', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=individual_trials[0].keys())
-            writer.writeheader()        # Write header row
-            writer.writerows(individual_trials)      # Write all rows
+            writer.writeheader()
+            writer.writerows(individual_trials)
+    
+    def test_3x3s(self):
+        individual_trials = []
+        for i in range(50):
+            list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            random.shuffle(list)
+            input = tuple(list + [0])
+            print(input)
+
+            puzzle = SurvivorsMinigame(input, 3, 3)
+            # print()
+            # print(f"3x3 A* with Default heuristic: Trial {i+1}")    
+            
+            # old_stdout = sys.stdout
+            # sys.stdout = mystdout = io.StringIO()
+            # startdef = time.time()
+            # print(astar_search(puzzle, None, True).solution())
+            # enddef = time.time()
+            # sys.stdout = old_stdout
+            # output = mystdout.getvalue()
+
+            # match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            # defsol = astar_search(puzzle, None, True).solution()
+            # if match:
+            #     expandeddef = int(match.group(1))
+            #     frontierdef = int(match.group(2))
+            #     # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            # else:
+            #     print("Could not parse output")
+
+            print(f"3x2 A* with MHD heuristic: Trial {i+1}")   
+
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startmhd = time.time()
+            print(astar_search(puzzle, mhd, True).solution())
+            endmhd = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+            
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            mhdsol = astar_search(puzzle, mhd, True).solution()
+            if match:
+                expandedmhd = int(match.group(1))
+                frontiermhd = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+            individual_dict = {
+                "input": input,
+                # "defSolution": defsol,
+                # "defExpanded": expandeddef,
+                # "defFrontier": frontierdef,
+                # "defTime": enddef-startdef,
+                "mhdSolution": mhdsol,
+                "mhdExpanded": expandedmhd,
+                "mhdFrontier": frontiermhd,
+                "mhdTime": endmhd-startmhd,
+            }
+            # if(defsol == mhdsol):
+            #     individual_dict["sameSolution"] = True
+            #     individual_dict["betterSolution"] = "N/A"
+            # else:
+            #     individual_dict["sameSolution"] = False
+            #     individual_dict["betterSolution"] = "Manhattan" if len(mhdsol) <= len(defsol) else "Default"
+
+            print(individual_dict)
+            individual_trials.append(individual_dict)
+        
+        with open('3x3output.csv', mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=individual_trials[0].keys())
+            writer.writeheader()
+            writer.writerows(individual_trials)
+
+    def test_4x2s(self):
+        individual_trials = []
+        for i in range(50):
+            list = [1, 2, 3, 4, 5, 6, 7, 8]
+            random.shuffle(list)
+            input = tuple(list + [0])
+            print(input)
+
+            puzzle = SurvivorsMinigame(input, 4, 2)
+            print()
+            print(f"4x2 A* with Default heuristic: Trial {i+1}")    
+            
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startdef = time.time()
+            print(astar_search(puzzle, None, True).solution())
+            enddef = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            defsol = astar_search(puzzle, None, True).solution()
+            if match:
+                expandeddef = int(match.group(1))
+                frontierdef = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+
+            print(f"4x2 A* with MHD heuristic: Trial {i+1}")   
+
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startmhd = time.time()
+            print(astar_search(puzzle, mhd, True).solution())
+            endmhd = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+            
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            mhdsol = astar_search(puzzle, mhd, True).solution()
+            if match:
+                expandedmhd = int(match.group(1))
+                frontiermhd = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+            individual_dict = {
+                "input": input,
+                "defSolution": defsol,
+                "defExpanded": expandeddef,
+                "defFrontier": frontierdef,
+                "defTime": enddef-startdef,
+                "mhdSolution": mhdsol,
+                "mhdExpanded": expandedmhd,
+                "mhdFrontier": frontiermhd,
+                "mhdTime": endmhd-startmhd,
+            }
+            if(defsol == mhdsol):
+                individual_dict["sameSolution"] = True
+                individual_dict["betterSolution"] = "N/A"
+            else:
+                individual_dict["sameSolution"] = False
+                individual_dict["betterSolution"] = "Manhattan" if len(mhdsol) <= len(defsol) else "Default"
+
+            print(individual_dict)
+            individual_trials.append(individual_dict)
+        
+        with open('5x2output.csv', mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=individual_trials[0].keys())
+            writer.writeheader()
+            writer.writerows(individual_trials)
 
 
 
@@ -253,49 +537,25 @@ def main():
     # rows x columns
 
     #=======================
-    print('Test Problem 2x3 result:')
+    # print('Test Problem 2x3 result:')
+    # print('=======================')
+    # minigame.test_problem()
+
+    # print('Testing 20 2x3s result:')
+    # print('=======================')
+    # minigame.test_2x3s()
+
+    print('Testing 50 3x2s result:')
     print('=======================')
-    print(minigame.test_problem())
+    minigame.test_3x2s()
 
-    # print('Test Problem 2x4 result:')
+    # print('Testing 50 3x3s result:')
     # print('=======================')
-    # print(minigame.test_problem_2())
+    # minigame.test_3x3s()
 
-    # print('Test Problem 4x2 result:')
+    # print('Testing 50 4x2s result:')
     # print('=======================')
-    # print(minigame.test_problem_3())
-
-    # print('Test Problem 3x3 result:')
-    # print('=======================')
-    # print(minigame.test_problem_4())
-
-    # print('Testing 20 2x4s result:')
-    # print('=======================')
-    # print(minigame.test_2x4s())
-
-    # print('Testing 20 3x3s result:')
-    # print('=======================')
-    # print(minigame.test_3x3s())
-
-    # print('Testing 3x4s result:')
-    # print('=======================')
-    # print(minigame.test_problem_3x4())
-
-    # print('Testing 8x2s result:')
-    # print('=======================')
-    # print(minigame.test_problem_8x2())
-
-    # print('Testing 20 3x4s result:')
-    # print('=======================')
-    # print(minigame.test_3x4s())
-
-    print('Testing 20 2x3s result:')
-    print('=======================')
-    minigame.test_2x3s()
-
-    # print('Testing 3x5s result:')
-    # print('=======================')
-    # print(minigame.test_problem_3x5())
+    # minigame.test_4x2s()
 
     
 if __name__ == '__main__':
