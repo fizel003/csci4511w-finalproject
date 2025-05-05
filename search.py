@@ -595,6 +595,113 @@ class PlanRoute(Problem):
 
         return abs(x2 - x1) + abs(y2 - y1)
 
+class SurvivorsMinigame(Problem):
+    """ The survivor's minigame, tiles numbered from 1 to 15 on a 3x5 board with one empty spot.
+    A state is represented as a tuple of length 15, with the last spot being the one that can 
+    move into the end of any row and the element at index i represents the tile number from 0-14. """
+
+    def __init__(self, initial, rows=2, columns=3):
+        """ Define goal state and initialize a problem """
+        self.columns = columns
+        self.rows = rows
+        goal = tuple(range(1, columns * rows + 1)) + (0,)
+        super().__init__(initial, goal)
+
+    def actions(self, state):
+        """ Return the actions that can be executed in the given state.
+        The result would be a list of the only three actions in any given state"""
+
+        possible_actions = [f"ROW{i}" for i in range(1, self.rows + 1)]
+        # print(possible_actions)
+
+        return possible_actions
+
+    def result(self, state, action):
+        """ Given state and action, return a new state that is the result of the action.
+        Action is assumed to be a valid action in the state """
+
+        rowindex = {f"ROW{i+1}": self.columns * (i) for i in range(0, self.rows)}
+        # print(rowindex)
+
+        new_state = list(state)
+        baseIndex = rowindex[action]
+        
+        if new_state[baseIndex+(self.columns - 1)] == 0:
+            new_state[baseIndex+(self.columns - 1)] = state[(self.columns * self.rows)]
+            new_state[(self.columns * self.rows)] = 0
+        else:
+            new_state[(self.columns * self.rows)] = state[baseIndex]
+
+            for i in range(0, self.columns):
+                new_state[baseIndex+i] = state[baseIndex+i+1]
+
+            new_state[baseIndex+(self.columns - 1)] = state[(self.columns * self.rows)]
+        return tuple(new_state)
+
+    def goal_test(self, state):
+        """ Given a state, return True if state is a goal state or False, otherwise """
+
+        return state == self.goal
+
+    def h(self, node):
+        """ Return the heuristic value for a given state. Default heuristic function used is 
+        h(n) = number of misplaced tiles """
+
+        return sum(s != g for (s, g) in zip(node.state, self.goal))
+
+# class SurvivorsMinigame(Problem):
+#     """ The survivor's minigame, tiles numbered from 1 to 15 on a 3x5 board with one empty spot.
+#     A state is represented as a tuple of length 15, with the last spot being the one that can 
+#     move into the end of any row and the element at index i represents the tile number from 0-14. """
+
+#     def __init__(self, initial, goal=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0)):
+#         """ Define goal state and initialize a problem """
+#         super().__init__(initial, goal)
+
+#     def actions(self, state):
+#         """ Return the actions that can be executed in the given state.
+#         The result would be a list of the only three actions in any given state"""
+
+#         possible_actions = ['ROW1', 'ROW2', 'ROW3']
+
+#         return possible_actions
+
+#     def result(self, state, action):
+#         """ Given state and action, return a new state that is the result of the action.
+#         Action is assumed to be a valid action in the state """
+
+#         rowindex = {
+#             "ROW1": 0,
+#             "ROW2": 5,
+#             "ROW3": 10
+#         }
+
+#         new_state = list(state)
+#         baseIndex = rowindex[action]
+        
+#         if new_state[baseIndex+4] == 0:
+#             new_state[baseIndex+4] = state[15]
+#             new_state[15] = 0
+#         else:
+#             new_state[15] = state[baseIndex]
+#             new_state[baseIndex] = state[baseIndex+1]
+#             new_state[baseIndex+1] = state[baseIndex+2]
+#             new_state[baseIndex+2] = state[baseIndex+3]
+#             new_state[baseIndex+3] = state[baseIndex+4]
+#             new_state[baseIndex+4] = state[15]
+#         return tuple(new_state)
+
+#     def goal_test(self, state):
+#         """ Given a state, return True if state is a goal state or False, otherwise """
+
+#         return state == self.goal
+
+#     def h(self, node):
+#         """ Return the heuristic value for a given state. Default heuristic function used is 
+#         h(n) = number of misplaced tiles """
+
+#         return sum(s != g for (s, g) in zip(node.state, self.goal))
+
 
 # ______________________________________________________________________________
 # Other search algorithms
