@@ -4,6 +4,10 @@ from search import *
 import math
 import random
 import time
+import io
+import sys
+import re
+import csv
 
 def mhd(node):
     rows = 8
@@ -40,9 +44,6 @@ def mhd(node):
     
     return totaldistance
 
-def pattern(self, node):
-    self.columns
-
 class SurvivorsMinigameTest:
 
     def __init__(self):
@@ -50,7 +51,7 @@ class SurvivorsMinigameTest:
 
     def test_problem(self):
         # Minigame example with A*
-        # Default goal is (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0)
+        # A 3x5 goal is (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0)
         #   which represents:   1  2  3  4  5
         #                  _    6  7  8  9  10
         #                       11 12 13 14 15
@@ -159,7 +160,7 @@ class SurvivorsMinigameTest:
             times.append(end3x3-start3x3)
         print(times)
 
-    def test_2x4s(self):
+    def test_2x3s(self):
         times = []
         for i in range(20):
             list = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -174,6 +175,74 @@ class SurvivorsMinigameTest:
             end3x3 = time.time()
             times.append(end3x3-start3x3)
         print(times)
+
+    def test_2x3s(self):
+        individual_trials = []
+        for i in range(50):
+            list = [1, 2, 3, 4, 5, 6]
+            random.shuffle(list)
+            input = tuple(list + [0])
+            print(input)
+
+            puzzle = SurvivorsMinigame(input, 2, 3)
+            print()
+            print(f"2x3 A* with Default heuristic: Trial {i+1}")    
+            
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startdef = time.time()
+            print(astar_search(puzzle, None, True).solution())
+            enddef = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            defsol = astar_search(puzzle, None, True).solution()
+            if match:
+                expandeddef = int(match.group(1))
+                frontierdef = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+
+            print(f"2x3 A* with MHD heuristic: Trial {i+1}")   
+
+            old_stdout = sys.stdout
+            sys.stdout = mystdout = io.StringIO()
+            startmhd = time.time()
+            print(astar_search(puzzle, mhd, True).solution())
+            endmhd = time.time()
+            sys.stdout = old_stdout
+            output = mystdout.getvalue()
+            
+
+            match = re.search(r'(\d+)\s+paths have been expanded and\s+(\d+)\s+paths remain in the frontier', output)
+            mhdsol = astar_search(puzzle, mhd, True).solution()
+            if match:
+                expandedmhd = int(match.group(1))
+                frontiermhd = int(match.group(2))
+                # print(f"Expanded: {expanded}, Frontier: {frontier}")
+            else:
+                print("Could not parse output")
+            individual_dict = {
+                "input": input,
+                "defsol": defsol,
+                "expandeddef": expandeddef,
+                "frontierdef": frontierdef,
+                "deftime": enddef-startdef,
+                "mhdsol": mhdsol,
+                "expandedmhd": expandedmhd,
+                "frontiermhd": frontiermhd,
+                "mhdtime": endmhd-startmhd,
+                "samesol": (defsol == mhdsol)
+            }
+            print(individual_dict)
+            individual_trials.append(individual_dict)
+        
+        with open('output.csv', mode='w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=individual_trials[0].keys())
+            writer.writeheader()        # Write header row
+            writer.writerows(individual_trials)      # Write all rows
 
 
 
@@ -212,13 +281,17 @@ def main():
     # print('=======================')
     # print(minigame.test_problem_3x4())
 
-    print('Testing 8x2s result:')
-    print('=======================')
-    print(minigame.test_problem_8x2())
+    # print('Testing 8x2s result:')
+    # print('=======================')
+    # print(minigame.test_problem_8x2())
 
     # print('Testing 20 3x4s result:')
     # print('=======================')
     # print(minigame.test_3x4s())
+
+    print('Testing 20 2x3s result:')
+    print('=======================')
+    minigame.test_2x3s()
 
     # print('Testing 3x5s result:')
     # print('=======================')
